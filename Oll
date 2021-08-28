@@ -1,0 +1,250 @@
+<html>
+    <head>
+        <script>
+            var algorithm = '';
+            var func;
+            var failed = [];
+            var resetOrPeekEnabled = false;
+            var flip = true;
+            var solved = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            var currentState = [...solved];
+            var functions = [
+                [[R, 1], [U, 2], [R, 2], [U, 3], [R, 2], [U, 3], [R, 2], [U, 2], [R, 1]]
+                , [[R, 1], [U, 1], [R, 3], [U, 1], [R, 1], [U, 3], [R, 3], [U, 1], [R, 1], [U, 2], [R, 3]]
+                , [[R, 1], [U, 1], [R, 3], [U, 1], [R, 1], [U, 2], [R, 3]]
+                , [[R, 1], [U, 2], [R, 3], [U, 3], [R, 1], [U, 3], [R, 3]]
+                , [[R, 2], [D, 1], [R, 3], [U, 2], [R, 1], [D, 3], [R, 3], [U, 2], [R, 3]]
+                , [[l, 3], [U, 3], [L, 1], [U, 1], [R, 1], [U, 3], [r, 3], [F, 1]]
+                , [[l, 3], [U, 3], [L, 3], [U, 1], [R, 1], [U, 3], [L, 1], [U, 1], [x, 3]]
+                , [[R, 1], [U, 1], [x, 3], [U, 3], [R, 1], [U, 1], [l, 3], [R, 3], [U, 3], [l, 3], [U, 1], [l, 1], [F, 3]]
+                , [[F, 1], [R, 1], [U, 1], [R, 3], [U, 3], [F, 3], [f, 1], [R, 1], [U, 1], [R, 3], [U, 3], [f, 3]]
+                , [[r, 3], [R, 2], [U, 1], [R, 3], [U, 1], [r, 1], [U, 2], [r, 3], [U, 1], [R, 3], [r, 1]]
+                , [[r, 3], [R, 1], [U, 3], [r, 1], [U, 2], [r, 3], [U, 3], [R, 1], [U, 3], [R, 2], [r, 1]]
+                , [[r, 3], [R, 1], [U, 1], [R, 1], [U, 1], [R, 3], [U, 3], [r, 1], [R, 2], [F, 1], [R, 1], [F, 3]]
+                , [[F, 1], [R, 1], [U, 1], [R, 3], [U, 1], [y, 3], [R, 3], [U, 2], [R, 3], [F, 1], [R, 1], [F, 3]]
+                , [[R, 1], [U, 1], [R, 3], [U, 1], [R, 3], [F, 1], [R, 1], [F, 3], [U, 2], [R, 3], [F, 1], [R, 1], [F, 3]]
+                , [[r, 3], [R, 1], [U, 1], [R, 1], [U, 1], [R, 3], [U, 3], [r, 2], [R, 2], [U, 1], [R, 1], [U, 3], [r, 3]]
+                , [[F, 1], [R, 1], [U, 1], [R, 3], [U, 3], [F, 3]]
+                , [[R, 1], [U, 1], [R, 3], [U, 3], [R, 3], [F, 1], [R, 1], [F, 3]]
+                , [[R, 3], [U, 3], [l, 3], [U, 1], [l, 1], [F, 3], [U, 1], [R, 1]]
+                , [[R, 1], [U, 1], [R, 3], [U, 3], [x, 1], [D, 3], [R, 3], [U, 1], [R, 1], [U, 3], [D, 1], [x, 3]]
+                , [[r, 1], [U, 2], [R, 3], [U, 3], [R, 1], [U, 3], [r, 3]]
+                , [[l, 3], [U, 2], [L, 1], [U, 1], [L, 3], [U, 1], [l, 1]]
+                , [[r, 1], [U, 1], [R, 3], [U, 1], [R, 1], [U, 2], [r, 3]]
+                , [[l, 3], [U, 3], [L, 1], [U, 3], [L, 3], [U, 2], [l, 1]]
+                , [[r, 1], [R, 2], [U, 3], [R, 1], [U, 3], [R, 3], [U, 2], [R, 1], [U, 3], [R, 1], [r, 3]]
+                , [[r, 3], [R, 2], [U, 1], [R, 3], [U, 1], [R, 1], [U, 2], [R, 3], [U, 1], [R, 3], [r, 1]]
+                , [[R, 3], [F, 1], [R, 1], [U, 1], [R, 3], [U, 3], [F, 3], [U, 1], [R, 1]]
+                , [[L, 1], [F, 3], [L, 3], [U, 3], [L, 1], [U, 1], [F, 1], [U, 3], [L, 3]]
+                , [[R, 3], [U, 2], [R, 2], [U, 1], [R, 3], [U, 1], [R, 1], [U, 2], [x, 3], [U, 3], [R, 3], [U, 1], [x, 1]]
+                , [[R, 3], [U, 3], [R, 1], [U, 3], [R, 3], [d, 1], [R, 3], [U, 1], [R, 1], [B, 1]]
+                , [[f, 1], [R, 1], [U, 1], [R, 3], [U, 3], [R, 1], [U, 1], [R, 3], [U, 3], [f, 3]]
+                , [[r, 3], [U, 3], [r, 1], [U, 3], [R, 3], [U, 1], [R, 1], [U, 3], [R, 3], [U, 1], [R, 1], [r, 3], [U, 1], [r, 1]]
+                , [[R, 1], [U, 1], [B, 3], [U, 3], [R, 3], [U, 1], [l, 1], [U, 1], [l, 3]]
+                , [[R, 3], [U, 3], [F, 1], [U, 1], [R, 1], [U, 3], [R, 3], [F, 3], [R, 1]]
+                , [[F, 1], [U, 1], [R, 1], [U, 3], [R, 3], [F, 3]]
+                , [[F, 3], [U, 3], [L, 3], [U, 1], [L, 1], [F, 1]]
+                , [[F, 1], [R, 1], [U, 1], [R, 3], [U, 3], [R, 1], [U, 1], [R, 3], [U, 3], [F, 3]]
+                , [[F, 3], [L, 3], [U, 3], [L, 1], [U, 1], [L, 3], [U, 3], [L, 1], [U, 1], [F, 1]]
+                , [[l, 3], [U, 1], [R, 3], [U, 3], [R, 1], [l, 1], [U, 2], [x, 3], [U, 3], [R, 1], [U, 1], [l, 3]]
+                , [[R, 3], [F, 1], [R, 2], [B, 3], [R, 2], [F, 3], [R, 2], [B, 1], [R, 3]]
+                , [[r, 3], [U, 3], [R, 1], [U, 3], [R, 3], [U, 1], [R, 1], [U, 3], [R, 3], [U, 2], [r, 1]]
+                , [[r, 1], [U, 1], [R, 3], [U, 1], [R, 1], [U, 3], [R, 3], [U, 1], [R, 1], [U, 2], [r, 3]]
+                , [[R, 1], [U, 1], [R, 3], [U, 1], [R, 1], [U, 3], [R, 3], [U, 3], [R, 3], [F, 1], [R, 1], [F, 3]]
+                , [[R, 3], [U, 3], [R, 1], [U, 3], [R, 3], [U, 1], [R, 1], [U, 1], [l, 1], [U, 3], [R, 3], [U, 1], [x, 1]]
+                , [[R, 3], [U, 3], [R, 1], [y, 3], [x, 3], [R, 1], [U, 3], [R, 3], [F, 1], [R, 1], [U, 1], [l, 3]]
+                , [[R, 1], [U, 1], [R, 3], [x, 1], [z, 3], [R, 3], [U, 1], [R, 1], [B, 3], [R, 3], [U, 3], [l, 1]]
+                , [[R, 3], [U, 2], [l, 1], [R, 1], [U, 3], [R, 3], [U, 1], [l, 3], [U, 2], [R, 1]]
+                , [[F, 1], [R, 1], [U, 3], [R, 3], [U, 3], [R, 1], [U, 1], [R, 3], [F, 3]]
+                , [[R, 3], [F, 1], [R, 1], [U, 1], [l, 3], [U, 3], [l, 1], [y, 3], [R, 1], [U, 3], [R, 3]]
+                , [[x, 3], [R, 1], [U, 3], [R, 3], [F, 3], [R, 1], [U, 1], [R, 3], [x, 1], [y, 1], [R, 3], [U, 1], [R, 1]]
+                , [[L, 1], [F, 1], [L, 3], [R, 1], [U, 1], [R, 3], [U, 3], [L, 1], [F, 3], [L, 3]]
+                , [[L, 3], [B, 3], [L, 1], [R, 3], [U, 3], [R, 1], [U, 1], [L, 3], [B, 1], [L, 1]]
+                , [[B, 3], [R, 1], [B, 3], [R, 2], [U, 1], [R, 1], [U, 1], [R, 3], [U, 3], [R, 1], [B, 2]]
+                , [[R, 2], [U, 1], [R, 3], [B, 3], [R, 1], [U, 3], [R, 2], [U, 1], [l, 1], [U, 1], [l, 3]]
+                , [[R, 1], [U, 1], [R, 3], [U, 1], [R, 1], [U, 2], [R, 3], [F, 1], [R, 1], [U, 1], [R, 3], [U, 3], [F, 3]]
+                , [[R, 3], [U, 3], [R, 1], [U, 3], [R, 3], [U, 2], [R, 1], [F, 1], [R, 1], [U, 1], [R, 3], [U, 3], [F, 3]]
+                , [[R, 1], [U, 1], [R, 3], [U, 3], [r, 1], [R, 3], [U, 1], [R, 1], [U, 3], [r, 3]]
+                , [[r, 1], [R, 3], [U, 1], [R, 1], [r, 3], [U, 2], [r, 1], [R, 3], [U, 1], [R, 1], [r, 3]]
+            ];
+
+            shuffle(functions);
+
+            function main() {
+                resetOrPeekEnabled = true;
+                if (flip) {
+                    if (functions.length == 0) {
+                        if (failed.length > 0) {
+                            functions = [...failed];
+                            shuffle(functions);
+                            failed = [];
+                            main();
+                        } else {
+                            setYellows(solved, '#666666');
+                            setButtonText('');
+                            resetOrPeekEnabled = false;
+                        };
+                    } else {
+                        algorithm = '';
+                        func = functions.pop();
+                        backward(func, solved);
+                        setButtonText('PEEK');
+                        flip = false;
+                    };
+                } else {
+                    currentState = forward(func, currentState);
+                    setButtonText('RESET');
+                    flip = true;
+                };
+            };
+
+            function setButtonText(text) {
+                document.getElementById('buttonText').innerHTML = text;
+            };
+
+            function resetOrPeek() {
+                if (resetOrPeekEnabled) {
+                    resetOrPeekEnabled = false;
+                    if (flip) {
+                        reset();
+                    } else {
+                        peek();
+                    };
+                };
+            };
+
+            function reset() {
+                currentState = [...solved];
+                setYellows(currentState);
+                failed.push(func);
+                setButtonText('');
+            };
+
+            function peek() {
+                setButtonText(algorithm);
+            };
+
+            function forward(func, array) {
+                func.forEach(element => array = element[0](element[1], array));
+                return array;
+            };
+
+            function backward(func, array) {
+                [...func].reverse().forEach(element => array = element[0](4 - element[1], array));
+                return array;
+            };
+
+            function setYellows(array, colour = '#FFFF00') {
+                array.forEach((element, index) => {
+                    var svg = document.getElementById('t' + index);
+                    if (svg) {
+                        svg.style.fill = element ? colour : '#FFFFFF';
+                    };
+                });
+            };
+
+            function B(n, array) { return permute('B', n, array, [06, 03, 00, 07, 04, 01, 08, 05, 02, 12, 13, 14, 15, 16, 17, 18, 19, 20, 09, 10, 11, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]); };
+            function b(n, array) { return permute('b', n, array, [06, 03, 00, 07, 04, 01, 08, 05, 02, 12, 13, 14, 15, 16, 17, 18, 19, 20, 09, 10, 11, 24, 25, 26, 27, 28, 29, 30, 31, 32, 21, 22, 23, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]); };
+            function D(n, array) { return permute('D', n, array, [17, 29, 41, 03, 04, 05, 06, 07, 08, 02, 10, 11, 12, 13, 14, 15, 16, 53, 42, 30, 18, 01, 22, 23, 24, 25, 26, 27, 28, 52, 43, 31, 19, 00, 34, 35, 36, 37, 38, 39, 40, 51, 44, 32, 20, 45, 46, 47, 48, 49, 50, 09, 21, 33]); };
+            function d(n, array) { return permute('d', n, array, [17, 29, 41, 16, 28, 40, 06, 07, 08, 02, 05, 11, 12, 13, 14, 15, 50, 53, 42, 30, 18, 01, 04, 23, 24, 25, 26, 27, 49, 52, 43, 31, 19, 00, 03, 35, 36, 37, 38, 39, 48, 51, 44, 32, 20, 45, 46, 47, 10, 22, 34, 09, 21, 33]); };
+            function F(n, array) { return permute('F', n, array, [00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 42, 43, 44, 33, 34, 35, 36, 37, 38, 39, 40, 41, 51, 48, 45, 52, 49, 46, 53, 50, 47]); };
+            function f(n, array) { return permute('f', n, array, [00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 31, 32, 21, 22, 23, 24, 25, 26, 27, 28, 29, 42, 43, 44, 33, 34, 35, 36, 37, 38, 39, 40, 41, 51, 48, 45, 52, 49, 46, 53, 50, 47]); };
+            function L(n, array) { return permute('L', n, array, [44, 01, 02, 32, 04, 05, 20, 07, 08, 33, 21, 09, 00, 13, 14, 15, 16, 17, 18, 19, 51, 34, 22, 10, 03, 25, 26, 27, 28, 29, 30, 31, 48, 35, 23, 11, 06, 37, 38, 39, 40, 41, 42, 43, 45, 12, 46, 47, 24, 49, 50, 36, 52, 53]); };
+            function l(n, array) { return permute('l', n, array, [44, 43, 02, 32, 31, 05, 20, 19, 08, 33, 21, 09, 00, 01, 14, 15, 16, 17, 18, 52, 51, 34, 22, 10, 03, 04, 26, 27, 28, 29, 30, 49, 48, 35, 23, 11, 06, 07, 38, 39, 40, 41, 42, 46, 45, 12, 13, 47, 24, 25, 50, 36, 37, 53]); };
+            function R(n, array) { return permute('R', n, array, [00, 01, 14, 03, 04, 26, 06, 07, 38, 09, 10, 11, 12, 13, 47, 39, 27, 15, 08, 19, 20, 21, 22, 23, 24, 25, 50, 40, 28, 16, 05, 31, 32, 33, 34, 35, 36, 37, 53, 41, 29, 17, 02, 43, 44, 45, 46, 42, 48, 49, 30, 51, 52, 18]); };
+            function r(n, array) { return permute('r', n, array, [00, 13, 14, 03, 25, 26, 06, 37, 38, 09, 10, 11, 12, 46, 47, 39, 27, 15, 08, 07, 20, 21, 22, 23, 24, 49, 50, 40, 28, 16, 05, 04, 32, 33, 34, 35, 36, 52, 53, 41, 29, 17, 02, 01, 44, 45, 43, 42, 48, 31, 30, 51, 19, 18]); };
+            function U(n, array) { return permute('U', n, array, [00, 01, 02, 03, 04, 05, 35, 23, 11, 09, 10, 45, 36, 24, 12, 06, 16, 17, 18, 19, 20, 21, 22, 46, 37, 25, 13, 07, 28, 29, 30, 31, 32, 33, 34, 47, 38, 26, 14, 08, 40, 41, 42, 43, 44, 39, 27, 15, 48, 49, 50, 51, 52, 53]); };
+            function u(n, array) { return permute('u', n, array, [00, 01, 02, 34, 22, 10, 35, 23, 11, 09, 48, 45, 36, 24, 12, 06, 03, 17, 18, 19, 20, 21, 49, 46, 37, 25, 13, 07, 04, 29, 30, 31, 32, 33, 50, 47, 38, 26, 14, 08, 05, 41, 42, 43, 44, 39, 27, 15, 40, 28, 16, 51, 52, 53]); };
+            function x(n, array) { return permute('x', n, array, [12, 13, 14, 24, 25, 26, 36, 37, 38, 11, 23, 35, 45, 46, 47, 39, 27, 15, 08, 07, 06, 10, 22, 34, 48, 49, 50, 40, 28, 16, 05, 04, 03, 09, 21, 33, 51, 52, 53, 41, 29, 17, 02, 01, 00, 44, 43, 42, 32, 31, 30, 20, 19, 18]); };
+            function y(n, array) { return permute('y', n, array, [33, 21, 09, 34, 22, 10, 35, 23, 11, 51, 48, 45, 36, 24, 12, 06, 03, 00, 20, 32, 44, 52, 49, 46, 37, 25, 13, 07, 04, 01, 19, 31, 43, 53, 50, 47, 38, 26, 14, 08, 05, 02, 18, 30, 42, 39, 27, 15, 40, 28, 16, 41, 29, 17]); };
+            function z(n, array) { return permute('z', n, array, [02, 05, 08, 01, 04, 07, 00, 03, 06, 18, 19, 20, 09, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 21, 22, 23, 24, 25, 26, 27, 28, 29, 42, 43, 44, 33, 34, 35, 36, 37, 38, 39, 40, 41, 51, 48, 45, 52, 49, 46, 53, 50, 47]); };
+
+            function permute(letter, n, array, permute) {
+                n = ((n % 4) + 4) % 4;
+
+                switch (n) {
+                    case 0:
+                        throw "Why is n zero?";
+                        break;
+                    case 1:
+                        letter += '\' ';
+                        break;
+                    case 2:
+                        letter += '2 ';
+                        break;
+                    case 3:
+                        letter += ' ';
+                        break;
+                };
+
+                algorithm = letter + algorithm;
+
+                for (var i = 0; i < n; i++) {
+                    array = array.map((element, index, arr) => arr[permute[index]]);
+                };
+                setYellows(array);
+                return array;
+            };
+
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                };
+            };
+        </script>
+        <style>
+            body {
+                background-color: #000000;
+            }
+
+            rect {
+                rx: 3;
+                ry: 3;
+            }
+
+            text {
+                font-family: Calibri;
+                font-size: 200%;
+                fill: #FFFFFF;
+                text-anchor: middle;
+                alignment-baseline: central;
+            }
+        </style>
+    </head>
+    <body onload="setYellows(solved)">
+        <center>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 370 470" width="100%" height="100%">
+                <g onclick="main()">
+                    <rect id="t6" x=" 20" y="  0" width="100" height=" 10" />
+                    <rect id="t7" x="130" y="  0" width="100" height=" 10" />
+                    <rect id="t8" x="240" y="  0" width="100" height=" 10" />
+
+                    <rect id="t11" x="  0" y=" 20" width=" 10" height="100" />
+                    <rect id="t12" x=" 20" y=" 20" width="100" height="100" />
+                    <rect id="t13" x="130" y=" 20" width="100" height="100" />
+                    <rect id="t14" x="240" y=" 20" width="100" height="100" />
+                    <rect id="t15" x="350" y=" 20" width=" 10" height="100" />
+
+                    <rect id="t23" x="  0" y="130" width=" 10" height="100" />
+                    <rect id="t24" x=" 20" y="130" width="100" height="100" />
+                    <rect id="t25" x="130" y="130" width="100" height="100" />
+                    <rect id="t26" x="240" y="130" width="100" height="100" />
+                    <rect id="t27" x="350" y="130" width=" 10" height="100" />
+
+                    <rect id="t35" x="  0" y="240" width=" 10" height="100" />
+                    <rect id="t36" x=" 20" y="240" width="100" height="100" />
+                    <rect id="t37" x="130" y="240" width="100" height="100" />
+                    <rect id="t38" x="240" y="240" width="100" height="100" />
+                    <rect id="t39" x="350" y="240" width=" 10" height="100" />
+
+                    <rect id="t45" x=" 20" y="350" width="100" height=" 10" />
+                    <rect id="t46" x="130" y="350" width="100" height=" 10" />
+                    <rect id="t47" x="240" y="350" width="100" height=" 10" />
+                </g>
+                <rect id="button" x="  0" y="370" onclick="resetOrPeek()" width="360" height="100" fill="#666666" />
+                <text id="buttonText" x="180" y="420" onclick="resetOrPeek()" />
+            </svg>
+        </center>
+    </body>
+</html>
