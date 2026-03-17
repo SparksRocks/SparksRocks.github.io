@@ -7,119 +7,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-
 body{
-font-family:Arial;
-margin:10px;
-background:#f3f5f7;
+  font-family:Arial;
+  margin:10px;
+  background:#f3f5f7;
 }
 
 h1{
-text-align:center;
+  text-align:center;
 }
 
 .section{
-background:white;
-padding:12px;
-margin-bottom:12px;
-border-radius:8px;
-box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  background:white;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
 }
 
 .grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-gap:8px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:8px;
 }
 
 input,select{
-width:100%;
-padding:6px;
+  width:100%;
+  padding:6px;
 }
 
 button{
-padding:10px;
-border:none;
-border-radius:6px;
-background:#2c7be5;
-color:white;
-cursor:pointer;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#2c7be5;
+  color:white;
+  cursor:pointer;
 }
 
 button:hover{
-background:#1f5fbf;
+  background:#1f5fbf;
 }
 
 .tableWrap{
-overflow-x:auto;
+  overflow-x:auto;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-font-size:13px;
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
 }
 
 th,td{
-border:1px solid #ccc;
-padding:6px;
+  border:1px solid #ccc;
+  padding:6px;
 }
 
 th{
-background:#e9eef5;
+  background:#e9eef5;
 }
 
 .fail{
-background:#ffdede;
-font-weight:bold;
+  background:#ffdede;
+  font-weight:bold;
 }
 
 .controls{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-top:10px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:10px;
 }
 
 /* PRINT HEADER */
-
 .printHeader{
-display:none;
+  display:none;
 }
 
 /* PRINT MODE */
-
 @media print{
 
-body{
-background:white;
-margin:0;
-}
+  body{
+    background:white;
+    margin:0;
+  }
 
-.entrySection{
-display:none;
-}
+  .entrySection{
+    display:none;
+  }
 
-.printHeader{
-display:block;
-margin-bottom:15px;
-}
+  .printHeader{
+    display:block;
+    margin-bottom:15px;
+  }
 
-.printHeader table{
-font-size:12px;
-margin-bottom:10px;
-}
+  .printHeader table{
+    font-size:12px;
+    margin-bottom:10px;
+  }
 
-.printHeader td{
-padding:4px;
-}
+  .printHeader td{
+    padding:4px;
+  }
 
-button{
-display:none;
-}
+  button{
+    display:none;
+  }
 
+  .section {
+    box-shadow:none;
+  }
 }
-
 </style>
 </head>
 
@@ -127,59 +126,35 @@ display:none;
 
 <div class="section entrySection">
 
-<h3>Engineer Information</h3>
+  <h3>Engineer Information</h3>
 
-<div class="grid">
+  <div class="grid">
 
-<label>Engineer Name
-<input id="engineerName">
-</label>
+    <label>Engineer Name
+      <input id="engineerName">
+    </label>
 
-<label>Company
-<input id="company">
-</label>
+    <label>Company
+      <input id="company">
+    </label>
 
-<label>Phone
-<input id="phone">
-</label>
+    <label>Phone
+      <input id="phone">
+    </label>
 
-<label>Equipment Make/Model
-<input id="equipment">
-</label>
+    <label>Equipment Make/Model
+      <input id="equipment">
+    </label>
 
-<label>Serial Number
-<input id="serial">
-</label>
+    <label>Serial Number
+      <input id="serial">
+    </label>
 
-<label>Calibration Date
-<input type="date" id="calibration">
-</label>
+    <label>Calibration Date
+      <input type="date" id="calibration">
+    </label>
 
-</div>
-
-</div>
-
-
-
-<div class="section entrySection">
-
-<h3>Job Information</h3>
-
-<div class="grid">
-
-<label>Client Name
-<input id="clientName">
-</label>
-
-<label>Client Address
-<input id="clientAddress">
-</label>
-
-<label>Date
-<input type="date" id="jobDate">
-</label>
-
-</div>
+  </div>
 
 </div>
 
@@ -187,52 +162,77 @@ display:none;
 
 <div class="section entrySection">
 
-<h3>Add Appliance</h3>
+  <h3>Job Information</h3>
 
-<div class="grid">
+  <div class="grid">
 
-<label>Description
-<input id="desc">
-</label>
+    <label>Client Name
+      <input id="clientName">
+    </label>
 
-<label>Location
-<input id="location">
-</label>
+    <label>Client Address
+      <input id="clientAddress">
+    </label>
 
-<label>Earth Bond Ω
-<input id="earth">
-</label>
+    <label>Date
+      <input type="date" id="jobDate">
+    </label>
 
-<label>Insulation MΩ
-<input id="insulation">
-</label>
-
-<label>Polarity
-<select id="polarity">
-<option>N/A</option>
-<option>✓</option>
-<option>✗</option>
-</select>
-</label>
-
-<label>Result
-<select id="result">
-<option>Pass</option>
-<option>Fail</option>
-</select>
-</label>
-
-<label>Re-Test Date
-<input type="date" id="retest">
-</label>
+  </div>
 
 </div>
 
-<div class="controls">
-<button id="addBtn">Add Appliance</button>
-<button onclick="window.print()">Print / Export PDF</button>
-<button onclick="clearData()">Clear All</button>
-</div>
+
+
+<div class="section entrySection">
+
+  <h3>Add Appliance</h3>
+
+  <div class="grid">
+
+    <label>Description
+      <input id="desc">
+    </label>
+
+    <label>Location
+      <!-- RENAMED to avoid window.location collision -->
+      <input id="applianceLocation">
+    </label>
+
+    <label>Earth Bond Ω
+      <input id="earth">
+    </label>
+
+    <label>Insulation MΩ
+      <input id="insulation">
+    </label>
+
+    <label>Polarity
+      <select id="polarity">
+        <option>N/A</option>
+        <option>✓</option>
+        <option>✗</option>
+      </select>
+    </label>
+
+    <label>Result
+      <select id="result">
+        <option>Pass</option>
+        <option>Fail</option>
+      </select>
+    </label>
+
+    <label>Re-Test Date
+      <input type="date" id="retest">
+    </label>
+
+  </div>
+
+  <div class="controls">
+    <button id="addBtn">Add Appliance</button>
+    <button onclick="window.print()">Print / Export PDF</button>
+    <button onclick="clearData()">Clear All</button>
+  </div>
 
 </div>
 
@@ -240,181 +240,182 @@ display:none;
 
 <div class="section">
 
-<div class="printHeader">
+  <div class="printHeader">
 
-<h2>PAT Testing Logbook</h2>
+    <h2>PAT Testing Logbook</h2>
 
-<table>
-<tr><td><b>Client</b></td><td id="p_client"></td></tr>
-<tr><td><b>Address</b></td><td id="p_address"></td></tr>
-<tr><td><b>Date</b></td><td id="p_date"></td></tr>
-</table>
+    <table>
+      <tr><td><b>Client</b></td><td id="p_client"></td></tr>
+      <tr><td><b>Address</b></td><td id="p_address"></td></tr>
+      <tr><td><b>Date</b></td><td id="p_date"></td></tr>
+    </table>
 
-<table>
-<tr><td><b>Engineer</b></td><td id="p_engineer"></td></tr>
-<tr><td><b>Company</b></td><td id="p_company"></td></tr>
-<tr><td><b>Phone</b></td><td id="p_phone"></td></tr>
-<tr><td><b>Equipment</b></td><td id="p_equipment"></td></tr>
-<tr><td><b>Serial</b></td><td id="p_serial"></td></tr>
-<tr><td><b>Calibration</b></td><td id="p_calibration"></td></tr>
-</table>
+    <table>
+      <tr><td><b>Engineer</b></td><td id="p_engineer"></td></tr>
+      <tr><td><b>Company</b></td><td id="p_company"></td></tr>
+      <tr><td><b>Phone</b></td><td id="p_phone"></td></tr>
+      <tr><td><b>Equipment</b></td><td id="p_equipment"></td></tr>
+      <tr><td><b>Serial</b></td><td id="p_serial"></td></tr>
+      <tr><td><b>Calibration</b></td><td id="p_calibration"></td></tr>
+    </table>
 
-</div>
+  </div>
 
-<div class="tableWrap">
+  <div class="tableWrap">
 
-<table id="table">
+    <table id="table">
 
-<thead>
-<tr>
-<th>Asset</th>
-<th>Description</th>
-<th>Location</th>
-<th>Earth Bond Ω</th>
-<th>Insulation MΩ</th>
-<th>Polarity</th>
-<th>Result</th>
-<th>Re-Test</th>
-</tr>
-</thead>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Description</th>
+          <th>Location</th>
+          <th>Earth Bond Ω</th>
+          <th>Insulation MΩ</th>
+          <th>Polarity</th>
+          <th>Result</th>
+          <th>Re-Test</th>
+        </tr>
+      </thead>
 
-<tbody></tbody>
+      <tbody></tbody>
 
-</table>
+    </table>
 
-</div>
+  </div>
 
 </div>
 
 
 
 <script>
-
 let rows = JSON.parse(localStorage.getItem("pat_rows") || "[]")
 
 function saveMeta(){
 
-const meta={
-engineerName:engineerName.value,
-company:company.value,
-phone:phone.value,
-equipment:equipment.value,
-serial:serial.value,
-calibration:calibration.value,
-clientName:clientName.value,
-clientAddress:clientAddress.value,
-jobDate:jobDate.value
-}
+  const meta={
+    engineerName:engineerName.value,
+    company:company.value,
+    phone:phone.value,
+    equipment:equipment.value,
+    serial:serial.value,
+    calibration:calibration.value,
+    clientName:clientName.value,
+    clientAddress:clientAddress.value,
+    jobDate:jobDate.value
+  }
 
-localStorage.setItem("pat_meta",JSON.stringify(meta))
-updatePrintHeader()
+  localStorage.setItem("pat_meta",JSON.stringify(meta))
+  updatePrintHeader()
 
 }
 
 function loadMeta(){
 
-const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
+  const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
 
-Object.keys(meta).forEach(k=>{
-const el=document.getElementById(k)
-if(el) el.value=meta[k]
-})
+  Object.keys(meta).forEach(k=>{
+    const el=document.getElementById(k)
+    if(el) el.value=meta[k]
+  })
 
-updatePrintHeader()
+  updatePrintHeader()
 
 }
 
 function updatePrintHeader(){
 
-const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
+  const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
 
-p_client.innerText=meta.clientName||""
-p_address.innerText=meta.clientAddress||""
-p_date.innerText=meta.jobDate||""
+  p_client.innerText=meta.clientName||""
+  p_address.innerText=meta.clientAddress||""
+  p_date.innerText=meta.jobDate||""
 
-p_engineer.innerText=meta.engineerName||""
-p_company.innerText=meta.company||""
-p_phone.innerText=meta.phone||""
-p_equipment.innerText=meta.equipment||""
-p_serial.innerText=meta.serial||""
-p_calibration.innerText=meta.calibration||""
+  p_engineer.innerText=meta.engineerName||""
+  p_company.innerText=meta.company||""
+  p_phone.innerText=meta.phone||""
+  p_equipment.innerText=meta.equipment||""
+  p_serial.innerText=meta.serial||""
+  p_calibration.innerText=meta.calibration||""
 
 }
 
 function autoSaveSetup(){
 
-document.querySelectorAll("input,select").forEach(el=>{
-el.addEventListener("blur",saveMeta)
-})
+  document.querySelectorAll("input,select").forEach(el=>{
+    el.addEventListener("blur",saveMeta)
+  })
 
 }
 
 function nextAsset(){
-return rows.length+1
+  return rows.length+1
 }
 
 function addRow(){
 
-const row={
-asset:nextAsset(),
-desc:desc.value,
-location:location.value,
-earth:earth.value,
-insulation:insulation.value,
-polarity:polarity.value,
-result:result.value,
-retest:retest.value
-}
+  const row={
+    asset:nextAsset(),
+    desc:desc.value,
+    // UPDATED to use the renamed input
+    location:applianceLocation.value,
+    earth:earth.value,
+    insulation:insulation.value,
+    polarity:polarity.value,
+    result:result.value,
+    retest:retest.value
+  }
 
-rows.push(row)
+  rows.push(row)
 
-localStorage.setItem("pat_rows",JSON.stringify(rows))
+  localStorage.setItem("pat_rows",JSON.stringify(rows))
 
-render()
+  render()
 
-desc.value=""
-location.value=""
-earth.value=""
-insulation.value=""
+  // reset inputs
+  desc.value=""
+  applianceLocation.value=""
+  earth.value=""
+  insulation.value=""
 
 }
 
 function render(){
 
-const body=document.querySelector("#table tbody")
+  const body=document.querySelector("#table tbody")
 
-body.innerHTML=""
+  body.innerHTML=""
 
-rows.forEach(r=>{
+  rows.forEach(r=>{
 
-const tr=document.createElement("tr")
+    const tr=document.createElement("tr")
 
-if(r.result==="Fail") tr.classList.add("fail")
+    if(r.result==="Fail") tr.classList.add("fail")
 
-tr.innerHTML=`
-<td>${r.asset}</td>
-<td>${r.desc}</td>
-<td>${r.location}</td>
-<td>${r.earth}</td>
-<td>${r.insulation}</td>
-<td>${r.polarity}</td>
-<td>${r.result}</td>
-<td>${r.retest}</td>
-`
+    tr.innerHTML=`
+      <td>${r.asset}</td>
+      <td>${r.desc}</td>
+      <td>${r.location}</td>
+      <td>${r.earth}</td>
+      <td>${r.insulation}</td>
+      <td>${r.polarity}</td>
+      <td>${r.result}</td>
+      <td>${r.retest}</td>
+    `
 
-body.appendChild(tr)
+    body.appendChild(tr)
 
-})
+  })
 
 }
 
 function clearData(){
 
-if(confirm("Clear all test results?")){
-rows=[]
-localStorage.removeItem("pat_rows")
-render()
-}
+  if(confirm("Clear all test results?")){
+    rows=[]
+    localStorage.removeItem("pat_rows")
+    render()
+  }
 
 }
 
