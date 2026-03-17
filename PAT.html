@@ -85,13 +85,24 @@ th{
   display:none;
 }
 
-/* ADDED: Screen "print mode" for PDF export (mirrors @media print) */
+/* Screen "print mode" for PDF export (mirrors @media print) */
 body.printMode .entrySection{
   display:none;
 }
 body.printMode .printHeader{
   display:block;
   margin-bottom:15px;
+}
+
+/* Ensure full-width capture on mobile (no horizontal clipping) */
+body.printMode .tableWrap{
+  overflow: visible !important;
+}
+
+/* Let the table expand to its natural width during capture */
+body.printMode table{
+  width: max-content !important;   /* fit columns */
+  max-width: none !important;      /* remove container limits */
 }
 
 /* PRINT MODE (for system print dialog) */
@@ -121,7 +132,7 @@ body.printMode .printHeader{
     box-shadow:none;
   }
 
-  /* CHANGED: Ensure A4 landscape when printing */
+  /* Ensure A4 landscape when printing */
   @page {
     size: A4 landscape;
     margin: 12mm;
@@ -238,25 +249,23 @@ body.printMode .printHeader{
       </select>
     </label>
 
-    <!-- CHANGED: Re-Test Date -> Re-Test Interval -->
+    <!-- Re-Test Interval -->
     <label>Re-Test Interval
       <select id="retestInterval" aria-label="Re-Test Interval">
         <option value="1">1 year</option>
         <option value="2">2 years</option>
       </select>
     </label>
-    <!-- END CHANGE -->
+    <!-- END -->
 
   </div>
 
   <div class="controls">
     <button id="addBtn">Add Appliance</button>
-    <!-- CHANGED: Export PDF button -->
     <button id="exportBtn" type="button">Export PDF</button>
-    <!-- ADDED: Share button (conditionally displayed) -->
     <button id="shareBtn" type="button" style="display:none">Share PDF</button>
     <button onclick="clearData()">Clear All</button>
-    <!-- (You can keep the old print button if you still want OS print dialog)
+    <!-- (Optional print dialog)
     <button onclick="window.print()">Print</button>
     -->
   </div>
@@ -265,7 +274,7 @@ body.printMode .printHeader{
 
 
 
-<div class="section" id="exportRoot"><!-- ADDED id for export target -->
+<div class="section" id="exportRoot"><!-- export target -->
 
   <div class="printHeader">
 
@@ -297,7 +306,6 @@ body.printMode .printHeader{
           <th>Asset</th>
           <th>Description</th>
           <th>Location</th>
-          <!-- Visual column header -->
           <th>Visual</th>
           <th>Earth Bond (Ω)</th>
           <th>Insulation (MΩ)</th>
@@ -315,7 +323,7 @@ body.printMode .printHeader{
 
 </div>
 
-<!-- ADDED: html2canvas and jsPDF (from CDN) -->
+<!-- html2canvas and jsPDF (from CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -474,7 +482,7 @@ function clearData(){
 
 }
 
-/* ---------- ADDED: PDF EXPORT & SHARE ---------- */
+/* ---------- PDF EXPORT & SHARE ---------- */
 
 /** Builds a consistent filename based on meta */
 function buildFileName(){
@@ -489,44 +497,86 @@ function setPrintMode(on){
   document.body.classList.toggle('printMode', !!on)
 }
 
+/** Ensure layout + fonts are ready before capture (Android-friendly) */
+async function waitForLayout() {
+  try { await window.document.fonts?.ready; } catch(e) {}
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+}
+
 /** Render the export root to a landscape A4 PDF and return a Blob + filename */
 async function buildPDFBlob(){
-  setPrintMode(true)
-  const exportRoot = document.getElementById('exportRoot')
-  // Wait a tick so layout updates before capture
-  await new Promise(r => setTimeout(r, 50))
+  setPrintMode(true);
+  const exportRoot = document.getElementById('exportRoot');
 
-  const canvas = await html2canvas(exportRoot, { scale: 2, backgroundColor: '#ffffff', useCORS: true })
-  const imgData = canvas.toDataURL('image/png')
+  // Wait for layout to stabilize with header shown
+  await waitForLayout();
 
-  const { jsPDF } = window.jspdf
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' })
-  const pageWidth = pdf.internal.pageSize.getWidth()
-  const pageHeight = pdf.internal.pageSize.getHeight()
+  // Measure full content size
+  const fullWidth = Math.max(exportRoot.scrollWidth, exportRoot.offsetWidth);
+  const fullHeight = Math.max(exportRoot.scrollHeight, exportRoot.offsetHeight);
 
-  // Scale image to page width; compute resulting height
-  const imgWidth = pageWidth
-  const imgHeight = canvas.height * imgWidth / canvas.width
+  // Temporarily expand the root so html2canvas can see full width
+  const prevWidth = exportRoot.style.width;
+  exportRoot.style.width = fullWidth + 'px';
 
-  // Multi-page if needed by shifting the same image up between pages
-  let position = 0
-  let remaining = imgHeight
+  // Cap the render scale so we don't hit mobile bitmap limits
+  const MAX_CANVAS_WIDTH = 4096; // safe for Android Chrome
+  const deviceScale = Math.min(window.devicePixelRatio || 1, 2);
+  const scale = Math.min(2, (MAX_CANVAS_WIDTH / fullWidth), deviceScale);
 
-  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-  remaining -= pageHeight
+  try{
+    const canvas = await html2canvas(exportRoot, {
+      scale,
+      width: fullWidth,
+      height: fullHeight,
+      windowWidth: fullWidth,
+      windowHeight: fullHeight,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false
+    });
 
-  while (remaining > 0){
-    pdf.addPage()
-    position -= pageHeight
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    remaining -= pageHeight
+    // Use JPEG for smaller memory footprint on mobile
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
+    const pageWidth = pdf.internal.pageSize.getWidth();   // ~842pt
+    const pageHeight = pdf.internal.pageSize.getHeight(); // ~595pt
+
+    // Map canvas width -> page width; derive how many canvas pixels fit per page vertically
+    const pxPerPt = canvas.width / pageWidth;
+    const pageHeightPx = Math.floor(pageHeight * pxPerPt);
+
+    // Slice the canvas into page-sized chunks (more reliable on Android than negative offsets)
+    for (let y = 0, page = 0; y < canvas.height; y += pageHeightPx, page++) {
+      const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
+
+      // Create a slice
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const pageCtx = pageCanvas.getContext('2d');
+
+      // Draw the portion of the full canvas into the slice
+      pageCtx.drawImage(canvas, 0, -y);
+
+      // Add to PDF (height in pt is sliceHeight/pxPerPt)
+      const sliceHeightPt = sliceHeight / pxPerPt;
+      const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
+
+      if (page > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, sliceHeightPt, undefined, 'FAST');
+    }
+
+    const blob = pdf.output('blob');
+    const filename = buildFileName();
+
+    return { blob, filename };
+  } finally {
+    // Always restore styles + mode
+    exportRoot.style.width = prevWidth;
+    setPrintMode(false);
   }
-
-  const blob = pdf.output('blob')
-  const filename = buildFileName()
-
-  setPrintMode(false)
-  return { blob, filename }
 }
 
 /** Trigger a download of the PDF */
