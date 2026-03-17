@@ -85,13 +85,32 @@ th{
   display:none;
 }
 
-/* Screen "print mode" for PDF export (mirrors @media print) */
+/* -------------------
+   SCREEN "PRINT MODE"
+   ------------------- */
+body.printMode{
+  background:#ffffff !important;
+  margin:0 !important;            /* remove outer whitespace */
+}
 body.printMode .entrySection{
-  display:none;
+  display:none !important;
 }
 body.printMode .printHeader{
-  display:block;
-  margin-bottom:15px;
+  display:block !important;
+  margin-bottom:15px !important;
+}
+
+/* remove visual artifacts that can create halos/borders */
+body.printMode .section{
+  box-shadow:none !important;
+  border:none !important;
+  border-radius:0 !important;
+  margin:0 !important;            /* collapse vertical gaps */
+  padding:0 !important;           /* optional: tighter top */
+}
+body.printMode #exportRoot{
+  padding:12px 12px 0 12px !important; /* internal white margin if you want breathing room */
+  background:#ffffff !important;
 }
 
 /* Ensure full-width capture on mobile (no horizontal clipping) */
@@ -105,7 +124,9 @@ body.printMode table{
   max-width: none !important;      /* remove container limits */
 }
 
-/* PRINT MODE (for system print dialog) */
+/* -------------------
+   SYSTEM PRINT MODE
+   ------------------- */
 @media print{
   body{
     background:white;
@@ -543,6 +564,9 @@ async function buildPDFBlob(){
     const pageWidth = pdf.internal.pageSize.getWidth();   // ~842pt
     const pageHeight = pdf.internal.pageSize.getHeight(); // ~595pt
 
+    // Fill white background (avoids any transparent edges showing as grey)
+    pdf.setFillColor(255,255,255);
+
     // Map canvas width -> page width; derive how many canvas pixels fit per page vertically
     const pxPerPt = canvas.width / pageWidth;
     const pageHeightPx = Math.floor(pageHeight * pxPerPt);
@@ -557,6 +581,10 @@ async function buildPDFBlob(){
       pageCanvas.height = sliceHeight;
       const pageCtx = pageCanvas.getContext('2d');
 
+      // Disable smoothing to avoid edge fuzz
+      pageCtx.imageSmoothingEnabled = true;
+      pageCtx.imageSmoothingQuality = 'high';
+
       // Draw the portion of the full canvas into the slice
       pageCtx.drawImage(canvas, 0, -y);
 
@@ -565,7 +593,23 @@ async function buildPDFBlob(){
       const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
 
       if (page > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, sliceHeightPt, undefined, 'FAST');
+
+      // Paint white background then overfill the image slightly to avoid a thin border
+      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      // Overfill by 0.5pt with -0.25pt offset so no 1px halo appears
+      const bleed = 0.5;   // pts
+      const offset = -bleed/2;
+      pdf.addImage(
+        imgData,
+        'JPEG',
+        offset,                // x
+        offset,                // y
+        pageWidth + bleed,     // width
+        sliceHeightPt + bleed, // height
+        undefined,
+        'FAST'
+      );
     }
 
     const blob = pdf.output('blob');
