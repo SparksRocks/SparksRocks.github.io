@@ -199,14 +199,13 @@ th{
       <input id="applianceLocation">
     </label>
 
-    <!-- NEW: Visual dropdown between Location and Earth Bond Ω -->
+    <!-- Visual dropdown between Location and Earth Bond Ω -->
     <label>Visual
       <select id="visual" aria-label="Visual inspection">
         <option>✓</option>
         <option>✗</option>
       </select>
     </label>
-    <!-- END NEW -->
 
     <label>Earth Bond Ω
       <input id="earth">
@@ -231,9 +230,14 @@ th{
       </select>
     </label>
 
-    <label>Re-Test Date
-      <input type="date" id="retest">
+    <!-- CHANGED: Re-Test Date -> Re-Test Interval -->
+    <label>Re-Test Interval
+      <select id="retestInterval" aria-label="Re-Test Interval">
+        <option value="1">1 year</option>
+        <option value="2">2 years</option>
+      </select>
     </label>
+    <!-- END CHANGE -->
 
   </div>
 
@@ -279,9 +283,8 @@ th{
           <th>Asset</th>
           <th>Description</th>
           <th>Location</th>
-          <!-- NEW: Visual column header -->
+          <!-- Visual column header -->
           <th>Visual</th>
-          <!-- END NEW -->
           <th>Earth Bond Ω</th>
           <th>Insulation MΩ</th>
           <th>Polarity</th>
@@ -364,18 +367,43 @@ function nextAsset(){
   return rows.length+1
 }
 
+/** Utility: add N years to a yyyy-mm-dd string; returns yyyy-mm-dd or "" if invalid */
+function addYearsToISO(iso, years){
+  if(!iso) return ""
+  const [y,m,d] = iso.split("-").map(Number)
+  if(!y || !m || !d) return ""
+  const dt = new Date(Date.UTC(y, m-1, d))
+  const targetYear = dt.getUTCFullYear() + Number(years || 0)
+
+  // Handle leap day carry: JS Date will roll correctly if Feb 29 -> Feb 28/Mar 1
+  dt.setUTCFullYear(targetYear)
+
+  // Format back to YYYY-MM-DD
+  const yy = dt.getUTCFullYear()
+  const mm = String(dt.getUTCMonth()+1).padStart(2,"0")
+  const dd = String(dt.getUTCDate()).padStart(2,"0")
+  return `${yy}-${mm}-${dd}`
+}
+
 function addRow(){
+
+  // Read meta to get the job date (re-test due depends on this)
+  const meta = JSON.parse(localStorage.getItem("pat_meta")||"{}")
+  const jobISO = meta.jobDate || ""   // expected format yyyy-mm-dd
+  const intervalYears = (document.getElementById("retestInterval")?.value) || "1"
+  const retestDue = addYearsToISO(jobISO, intervalYears)
 
   const row={
     asset:nextAsset(),
     desc:desc.value,
     location:applianceLocation.value, // uses renamed input
-    visual:visual.value,              // NEW: capture visual
+    visual:visual.value,              // capture visual
     earth:earth.value,
     insulation:insulation.value,
     polarity:polarity.value,
     result:result.value,
-    retest:retest.value
+    // store the computed date (or "" if job date missing)
+    retest:retestDue
   }
 
   rows.push(row)
@@ -387,10 +415,12 @@ function addRow(){
   // reset inputs
   desc.value=""
   applianceLocation.value=""
-  visual.selectedIndex = 0 // NEW: reset visual
+  visual.selectedIndex = 0
   earth.value=""
   insulation.value=""
-
+  // reset interval back to 1 year
+  const ri = document.getElementById("retestInterval")
+  if(ri) ri.value = "1"
 }
 
 function render(){
@@ -409,9 +439,7 @@ function render(){
       <td>${r.asset}</td>
       <td>${r.desc}</td>
       <td>${r.location}</td>
-      <!-- NEW: visual column -->
       <td>${r.visual || ""}</td>
-      <!-- END NEW -->
       <td>${r.earth}</td>
       <td>${r.insulation}</td>
       <td>${r.polarity}</td>
