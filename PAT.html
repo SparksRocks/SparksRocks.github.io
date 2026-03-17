@@ -106,7 +106,7 @@ body.printMode .section{
   border:none !important;
   border-radius:0 !important;
   margin:0 !important;            /* collapse vertical gaps */
-  padding:0 !important;           /* optional: tighter top */
+  padding:0 !important;
 }
 body.printMode #exportRoot{
   padding:12px 12px 0 12px !important; /* internal white margin if you want breathing room */
@@ -525,7 +525,8 @@ async function waitForLayout() {
   await new Promise(r => requestAnimationFrame(r));
 }
 
-/** Render the export root to a landscape A4 PDF and return a Blob + filename */
+/** Render the export root to a landscape A4 PDF and return a Blob + filename
+ *  Uses fixed margins and mm units so each page is true A4 on Android. */
 async function buildPDFBlob(){
   setPrintMode(true);
   const exportRoot = document.getElementById('exportRoot');
@@ -541,7 +542,7 @@ async function buildPDFBlob(){
   const prevWidth = exportRoot.style.width;
   exportRoot.style.width = fullWidth + 'px';
 
-  // Cap the render scale so we don't hit mobile bitmap limits
+  // Safe render scale so we don't hit mobile bitmap limits
   const MAX_CANVAS_WIDTH = 4096; // safe for Android Chrome
   const deviceScale = Math.min(window.devicePixelRatio || 1, 2);
   const scale = Math.min(2, (MAX_CANVAS_WIDTH / fullWidth), deviceScale);
@@ -558,58 +559,59 @@ async function buildPDFBlob(){
       logging: false
     });
 
-    // Use JPEG for smaller memory footprint on mobile
+    // ---- jsPDF: A4 Landscape with mm units ----
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
-    const pageWidth = pdf.internal.pageSize.getWidth();   // ~842pt
-    const pageHeight = pdf.internal.pageSize.getHeight(); // ~595pt
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
 
-    // Fill white background (avoids any transparent edges showing as grey)
+    // Page size in mm (A4 landscape: 297 x 210)
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    // Margins (mm)
+    const margin = 12; // all sides
+    const contentW = pageW - margin * 2;
+    const contentH = pageH - margin * 2;
+
+    // Map canvas width -> content width; derive how many canvas pixels fit per page vertically
+    const pxPerMm = canvas.width / contentW;
+    const pageHeightPx = Math.floor(contentH * pxPerMm);
+
+    // Prepare white background paint (forces viewer to keep full page)
     pdf.setFillColor(255,255,255);
 
-    // Map canvas width -> page width; derive how many canvas pixels fit per page vertically
-    const pxPerPt = canvas.width / pageWidth;
-    const pageHeightPx = Math.floor(pageHeight * pxPerPt);
-
-    // Slice the canvas into page-sized chunks (more reliable on Android than negative offsets)
+    // Slice the canvas into page-sized chunks (content area only)
     for (let y = 0, page = 0; y < canvas.height; y += pageHeightPx, page++) {
       const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
 
-      // Create a slice
+      // Create a slice canvas of width=full canvas width and height=sliceHeight
       const pageCanvas = document.createElement('canvas');
       pageCanvas.width = canvas.width;
       pageCanvas.height = sliceHeight;
-      const pageCtx = pageCanvas.getContext('2d');
-
-      // Disable smoothing to avoid edge fuzz
+      const pageCtx = pageCanvas.getContext('2d', { willReadFrequently: false });
       pageCtx.imageSmoothingEnabled = true;
       pageCtx.imageSmoothingQuality = 'high';
 
       // Draw the portion of the full canvas into the slice
       pageCtx.drawImage(canvas, 0, -y);
 
-      // Add to PDF (height in pt is sliceHeight/pxPerPt)
-      const sliceHeightPt = sliceHeight / pxPerPt;
+      // Convert to JPEG (smaller, stable on Android)
       const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
 
-      if (page > 0) pdf.addPage();
+      if (page > 0) pdf.addPage('a4', 'landscape');
 
-      // Paint white background then overfill the image slightly to avoid a thin border
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+      // Paint full page white (ensures MediaBox shows as full A4 visually)
+      pdf.rect(0, 0, pageW, pageH, 'F');
 
-      // Overfill by 0.5pt with -0.25pt offset so no 1px halo appears
-      const bleed = 0.5;   // pts
-      const offset = -bleed/2;
-      pdf.addImage(
-        imgData,
-        'JPEG',
-        offset,                // x
-        offset,                // y
-        pageWidth + bleed,     // width
-        sliceHeightPt + bleed, // height
-        undefined,
-        'FAST'
-      );
+      // Height of this slice in mm (keep aspect ratio)
+      const sliceH_mm = sliceHeight / pxPerMm;
+
+      // Place the image at fixed margins; width = contentW; height = sliceH_mm (<= contentH)
+      pdf.addImage(imgData, 'JPEG', margin, margin, contentW, sliceH_mm, undefined, 'FAST');
+
+      // Optionally, draw an invisible (white) dot at the bottom-right content corner
+      // to discourage viewers from auto-cropping last page (not visible on white background).
+      pdf.setDrawColor(255,255,255);
+      pdf.circle(pageW - 0.1, pageH - 0.1, 0.05, 'F'); // tiny white dot
     }
 
     const blob = pdf.output('blob');
