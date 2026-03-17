@@ -199,6 +199,15 @@ th{
       <input id="applianceLocation">
     </label>
 
+    <!-- NEW: Visual dropdown between Location and Earth Bond Ω -->
+    <label>Visual
+      <select id="visual" aria-label="Visual inspection">
+        <option>✓</option>
+        <option>✗</option>
+      </select>
+    </label>
+    <!-- END NEW -->
+
     <label>Earth Bond Ω
       <input id="earth">
     </label>
@@ -270,6 +279,9 @@ th{
           <th>Asset</th>
           <th>Description</th>
           <th>Location</th>
+          <!-- NEW: Visual column header -->
+          <th>Visual</th>
+          <!-- END NEW -->
           <th>Earth Bond Ω</th>
           <th>Insulation MΩ</th>
           <th>Polarity</th>
@@ -357,8 +369,8 @@ function addRow(){
   const row={
     asset:nextAsset(),
     desc:desc.value,
-    // UPDATED to use the renamed input
-    location:applianceLocation.value,
+    location:applianceLocation.value, // uses renamed input
+    visual:visual.value,              // NEW: capture visual
     earth:earth.value,
     insulation:insulation.value,
     polarity:polarity.value,
@@ -375,6 +387,7 @@ function addRow(){
   // reset inputs
   desc.value=""
   applianceLocation.value=""
+  visual.selectedIndex = 0 // NEW: reset visual
   earth.value=""
   insulation.value=""
 
@@ -396,6 +409,9 @@ function render(){
       <td>${r.asset}</td>
       <td>${r.desc}</td>
       <td>${r.location}</td>
+      <!-- NEW: visual column -->
+      <td>${r.visual || ""}</td>
+      <!-- END NEW -->
       <td>${r.earth}</td>
       <td>${r.insulation}</td>
       <td>${r.polarity}</td>
