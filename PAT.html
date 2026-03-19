@@ -85,78 +85,38 @@ th{
   display:none;
 }
 
-/* -------------------
-   SCREEN "PRINT MODE"
-   ------------------- */
-body.printMode{
-  background:#ffffff !important;
-  margin:0 !important;            /* remove outer whitespace */
-}
-body.printMode .entrySection{
-  display:none !important;
-}
-body.printMode .printHeader{
-  display:block !important;
-  margin-bottom:15px !important;
-}
-
-/* remove visual artifacts that can create halos/borders */
-body.printMode .section{
-  box-shadow:none !important;
-  border:none !important;
-  border-radius:0 !important;
-  margin:0 !important;            /* collapse vertical gaps */
-  padding:0 !important;
-}
-body.printMode #exportRoot{
-  padding:12px 12px 0 12px !important; /* internal white margin if you want breathing room */
-  background:#ffffff !important;
-}
-
-/* Ensure full-width capture on mobile (no horizontal clipping) */
-body.printMode .tableWrap{
-  overflow: visible !important;
-}
-
-/* Let the table expand to its natural width during capture */
-body.printMode table{
-  width: max-content !important;   /* fit columns */
-  max-width: none !important;      /* remove container limits */
-}
-
-/* -------------------
-   SYSTEM PRINT MODE
-   ------------------- */
+/* PRINT MODE */
 @media print{
+
   body{
     background:white;
     margin:0;
   }
+
   .entrySection{
     display:none;
   }
+
   .printHeader{
     display:block;
     margin-bottom:15px;
   }
+
   .printHeader table{
     font-size:12px;
     margin-bottom:10px;
   }
+
   .printHeader td{
     padding:4px;
   }
+
   button{
     display:none;
   }
+
   .section {
     box-shadow:none;
-  }
-
-  /* Ensure A4 landscape when printing */
-  @page {
-    size: A4 landscape;
-    margin: 12mm;
   }
 }
 </style>
@@ -270,32 +230,28 @@ body.printMode table{
       </select>
     </label>
 
-    <!-- Re-Test Interval -->
+    <!-- CHANGED: Re-Test Date -> Re-Test Interval -->
     <label>Re-Test Interval
       <select id="retestInterval" aria-label="Re-Test Interval">
         <option value="1">1 year</option>
         <option value="2">2 years</option>
       </select>
     </label>
-    <!-- END -->
+    <!-- END CHANGE -->
 
   </div>
 
   <div class="controls">
     <button id="addBtn">Add Appliance</button>
-    <button id="exportBtn" type="button">Export PDF</button>
-    <button id="shareBtn" type="button" style="display:none">Share PDF</button>
+    <button onclick="window.print()">Print / Export PDF</button>
     <button onclick="clearData()">Clear All</button>
-    <!-- (Optional print dialog)
-    <button onclick="window.print()">Print</button>
-    -->
   </div>
 
 </div>
 
 
 
-<div class="section" id="exportRoot"><!-- export target -->
+<div class="section">
 
   <div class="printHeader">
 
@@ -327,6 +283,7 @@ body.printMode table{
           <th>Asset</th>
           <th>Description</th>
           <th>Location</th>
+          <!-- Visual column header -->
           <th>Visual</th>
           <th>Earth Bond (Ω)</th>
           <th>Insulation (MΩ)</th>
@@ -344,9 +301,7 @@ body.printMode table{
 
 </div>
 
-<!-- html2canvas and jsPDF (from CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 
 <script>
 let rows = JSON.parse(localStorage.getItem("pat_rows") || "[]")
@@ -419,7 +374,11 @@ function addYearsToISO(iso, years){
   if(!y || !m || !d) return ""
   const dt = new Date(Date.UTC(y, m-1, d))
   const targetYear = dt.getUTCFullYear() + Number(years || 0)
+
+  // Handle leap day carry: JS Date will roll correctly if Feb 29 -> Feb 28/Mar 1
   dt.setUTCFullYear(targetYear)
+
+  // Format back to YYYY-MM-DD
   const yy = dt.getUTCFullYear()
   const mm = String(dt.getUTCMonth()+1).padStart(2,"0")
   const dd = String(dt.getUTCDate()).padStart(2,"0")
@@ -467,6 +426,7 @@ function addRow(){
 function render(){
 
   const body=document.querySelector("#table tbody")
+
   body.innerHTML=""
 
   rows.forEach(r=>{
@@ -503,203 +463,12 @@ function clearData(){
 
 }
 
-/* ---------- PDF EXPORT & SHARE ---------- */
-
-/** Builds a consistent filename based on meta */
-function buildFileName(){
-  const meta = JSON.parse(localStorage.getItem("pat_meta")||"{}")
-  const client = (meta.clientName || "Client").replace(/[^a-z0-9 _-]/gi,"").trim().replace(/\s+/g,'_')
-  const date = (meta.jobDate || new Date().toISOString().slice(0,10))
-  return `PAT_Logbook_${client}_${date}.pdf`
-}
-
-/** Enter/exit screen "print mode" so header shows and forms hide */
-function setPrintMode(on){
-  document.body.classList.toggle('printMode', !!on)
-}
-
-/** Ensure layout + fonts are ready before capture (Android-friendly) */
-async function waitForLayout() {
-  try { await window.document.fonts?.ready; } catch(e) {}
-  await new Promise(r => requestAnimationFrame(r));
-  await new Promise(r => requestAnimationFrame(r));
-}
-
-/** Render the export root to a landscape A4 PDF and return a Blob + filename
- *  Uses fixed margins and mm units so each page is true A4 on Android. */
-async function buildPDFBlob(){
-  setPrintMode(true);
-  const exportRoot = document.getElementById('exportRoot');
-
-  // Wait for layout to stabilize with header shown
-  await waitForLayout();
-
-  // Measure full content size
-  const fullWidth = Math.max(exportRoot.scrollWidth, exportRoot.offsetWidth);
-  const fullHeight = Math.max(exportRoot.scrollHeight, exportRoot.offsetHeight);
-
-  // Temporarily expand the root so html2canvas can see full width
-  const prevWidth = exportRoot.style.width;
-  exportRoot.style.width = fullWidth + 'px';
-
-  // Safe render scale so we don't hit mobile bitmap limits
-  const MAX_CANVAS_WIDTH = 4096; // safe for Android Chrome
-  const deviceScale = Math.min(window.devicePixelRatio || 1, 2);
-  const scale = Math.min(2, (MAX_CANVAS_WIDTH / fullWidth), deviceScale);
-
-  try{
-    const canvas = await html2canvas(exportRoot, {
-      scale,
-      width: fullWidth,
-      height: fullHeight,
-      windowWidth: fullWidth,
-      windowHeight: fullHeight,
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      logging: false
-    });
-
-    // ---- jsPDF: A4 Landscape with mm units ----
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
-
-    // Page size in mm (A4 landscape: 297 x 210)
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-
-    // Margins (mm)
-    const margin = 12; // all sides
-    const contentW = pageW - margin * 2;
-    const contentH = pageH - margin * 2;
-
-    // Map canvas width -> content width; derive how many canvas pixels fit per page vertically
-    const pxPerMm = canvas.width / contentW;
-    const pageHeightPx = Math.floor(contentH * pxPerMm);
-
-    // Prepare white background paint (forces viewer to keep full page)
-    pdf.setFillColor(255,255,255);
-
-    // Slice the canvas into page-sized chunks (content area only)
-    for (let y = 0, page = 0; y < canvas.height; y += pageHeightPx, page++) {
-      const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
-
-      // Create a slice canvas of width=full canvas width and height=sliceHeight
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = sliceHeight;
-      const pageCtx = pageCanvas.getContext('2d', { willReadFrequently: false });
-      pageCtx.imageSmoothingEnabled = true;
-      pageCtx.imageSmoothingQuality = 'high';
-
-      // Draw the portion of the full canvas into the slice
-      pageCtx.drawImage(canvas, 0, -y);
-
-      // Convert to JPEG (smaller, stable on Android)
-      const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
-
-      if (page > 0) pdf.addPage('a4', 'landscape');
-
-      // Paint full page white (ensures MediaBox shows as full A4 visually)
-      pdf.rect(0, 0, pageW, pageH, 'F');
-
-      // Height of this slice in mm (keep aspect ratio)
-      const sliceH_mm = sliceHeight / pxPerMm;
-
-      // Place the image at fixed margins; width = contentW; height = sliceH_mm (<= contentH)
-      pdf.addImage(imgData, 'JPEG', margin, margin, contentW, sliceH_mm, undefined, 'FAST');
-
-      // Optionally, draw an invisible (white) dot at the bottom-right content corner
-      // to discourage viewers from auto-cropping last page (not visible on white background).
-      pdf.setDrawColor(255,255,255);
-      pdf.circle(pageW - 0.1, pageH - 0.1, 0.05, 'F'); // tiny white dot
-    }
-
-    const blob = pdf.output('blob');
-    const filename = buildFileName();
-
-    return { blob, filename };
-  } finally {
-    // Always restore styles + mode
-    exportRoot.style.width = prevWidth;
-    setPrintMode(false);
-  }
-}
-
-/** Trigger a download of the PDF */
-async function exportPDF(){
-  try{
-    const { blob, filename } = await buildPDFBlob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
-  }catch(err){
-    console.error('Export PDF failed:', err)
-    alert('Sorry, the PDF export failed. Please try again.')
-    setPrintMode(false)
-  }
-}
-
-/** Share the PDF via Web Share API (if supported) */
-async function sharePDF(){
-  if(!navigator.share){
-    return
-  }
-  try{
-    const { blob, filename } = await buildPDFBlob()
-    const file = new File([blob], filename, { type: 'application/pdf', lastModified: Date.now() })
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })){
-      await navigator.share({
-        files: [file],
-        title: 'PAT Testing Logbook',
-        text: 'PAT logbook PDF export'
-      })
-    }else{
-      // Fallback: share text only if files aren’t supported
-      await navigator.share({
-        title: 'PAT Testing Logbook',
-        text: 'The PDF was generated — please tap “Export PDF” to download it.'
-      })
-    }
-  }catch(err){
-    if (err && err.name === 'AbortError'){
-      // User cancelled share; ignore
-      return
-    }
-    console.error('Sharing failed:', err)
-    alert('Sharing failed on this device/browser.')
-  }finally{
-    setPrintMode(false)
-  }
-}
-
-/** Setup buttons and conditional Share button visibility */
-function setupExportShareButtons(){
-  const exportBtn = document.getElementById('exportBtn')
-  const shareBtn = document.getElementById('shareBtn')
-
-  exportBtn?.addEventListener('click', exportPDF)
-
-  // Show share button only if navigator.share exists
-  if (navigator.share){
-    shareBtn.style.display = 'inline-block'
-    shareBtn.addEventListener('click', sharePDF)
-  }
-}
-
-/* ---------- END: PDF EXPORT & SHARE ---------- */
-
 document.getElementById("addBtn").addEventListener("click",addRow)
 
 loadMeta()
 autoSaveSetup()
 render()
-setupExportShareButtons()
+
 </script>
 
 </body>
