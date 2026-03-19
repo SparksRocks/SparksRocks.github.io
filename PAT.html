@@ -6,15 +6,14 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{
   font-family:Arial;
   margin:10px;
   background:#f3f5f7;
-}
-
-h1{
-  text-align:center;
 }
 
 .section{
@@ -64,10 +63,6 @@ th,td{
   padding:6px;
 }
 
-th{
-  background:#e9eef5;
-}
-
 .fail{
   background:#ffdede;
   font-weight:bold;
@@ -79,302 +74,111 @@ th{
   flex-wrap:wrap;
   margin-top:10px;
 }
-
-/* PRINT HEADER */
-.printHeader{
-  display:none;
-}
-
-/* PRINT MODE */
-@media print{
-
-  body{
-    background:white;
-    margin:0;
-  }
-
-  .entrySection{
-    display:none;
-  }
-
-  .printHeader{
-    display:block;
-    margin-bottom:15px;
-  }
-
-  .printHeader table{
-    font-size:12px;
-    margin-bottom:10px;
-  }
-
-  .printHeader td{
-    padding:4px;
-  }
-
-  button{
-    display:none;
-  }
-
-  .section {
-    box-shadow:none;
-  }
-}
 </style>
 </head>
 
 <body>
 
 <div class="section entrySection">
-
-  <h3>Engineer Information</h3>
-
-  <div class="grid">
-
-    <label>Engineer Name
-      <input id="engineerName">
-    </label>
-
-    <label>Company
-      <input id="company">
-    </label>
-
-    <label>Phone
-      <input id="phone">
-    </label>
-
-    <label>Equipment Make/Model
-      <input id="equipment">
-    </label>
-
-    <label>Serial Number
-      <input id="serial">
-    </label>
-
-    <label>Calibration Date
-      <input type="date" id="calibration">
-    </label>
-
-  </div>
-
+<h3>Engineer Information</h3>
+<div class="grid">
+<label>Engineer Name <input id="engineerName"></label>
+<label>Company <input id="company"></label>
+<label>Phone <input id="phone"></label>
+<label>Equipment <input id="equipment"></label>
+<label>Serial <input id="serial"></label>
+<label>Calibration <input type="date" id="calibration"></label>
+</div>
 </div>
 
 <div class="section entrySection">
-
-  <h3>Job Information</h3>
-
-  <div class="grid">
-
-    <label>Client Name
-      <input id="clientName">
-    </label>
-
-    <label>Client Address
-      <input id="clientAddress">
-    </label>
-
-    <label>Date
-      <input type="date" id="jobDate">
-    </label>
-
-  </div>
-
+<h3>Job Information</h3>
+<div class="grid">
+<label>Client Name <input id="clientName"></label>
+<label>Client Address <input id="clientAddress"></label>
+<label>Date <input type="date" id="jobDate"></label>
+</div>
 </div>
 
 <div class="section entrySection">
+<h3>Add Appliance</h3>
 
-  <h3>Add Appliance</h3>
+<div class="grid">
+<label>Description <input id="desc"></label>
+<label>Location <input id="applianceLocation"></label>
 
-  <div class="grid">
+<label>Visual
+<select id="visual">
+<option>✓</option><option>✗</option>
+</select>
+</label>
 
-    <label>Description
-      <input id="desc">
-    </label>
+<label>Earth Bond (Ω)
+<input id="earth" type="number" step="0.01" inputmode="decimal">
+</label>
 
-    <label>Location
-      <input id="applianceLocation">
-    </label>
+<label>Insulation (MΩ)
+<input id="insulation" type="number" step="0.01" inputmode="decimal">
+</label>
 
-    <label>Visual
-      <select id="visual">
-        <option>✓</option>
-        <option>✗</option>
-      </select>
-    </label>
+<label>Polarity
+<select id="polarity">
+<option>N/A</option><option>✓</option><option>✗</option>
+</select>
+</label>
 
-    <!-- ✅ UPDATED -->
-    <label>Earth Bond (Ω)
-      <input 
-        id="earth"
-        type="number"
-        step="0.01"
-        inputmode="decimal"
-        min="0"
-        placeholder="e.g. 0.15">
-    </label>
+<label>Result
+<select id="result">
+<option>Pass</option><option>Fail</option>
+</select>
+</label>
 
-    <!-- ✅ UPDATED -->
-    <label>Insulation (MΩ)
-      <input 
-        id="insulation"
-        type="number"
-        step="0.01"
-        inputmode="decimal"
-        min="0"
-        placeholder="e.g. 200">
-    </label>
+<label>Re-Test Interval
+<select id="retestInterval">
+<option value="1">1 year</option>
+<option value="2">2 years</option>
+</select>
+</label>
+</div>
 
-    <label>Polarity
-      <select id="polarity">
-        <option>N/A</option>
-        <option>✓</option>
-        <option>✗</option>
-      </select>
-    </label>
-
-    <label>Result
-      <select id="result">
-        <option>Pass</option>
-        <option>Fail</option>
-      </select>
-    </label>
-
-    <label>Re-Test Interval
-      <select id="retestInterval">
-        <option value="1">1 year</option>
-        <option value="2">2 years</option>
-      </select>
-    </label>
-
-  </div>
-
-  <div class="controls">
-    <button id="addBtn">Add Appliance</button>
-    <button onclick="window.print()">Print / Export PDF</button>
-    <button onclick="clearData()">Clear All</button>
-  </div>
-
+<div class="controls">
+<button id="addBtn">Add Appliance</button>
+<button onclick="sharePDF()">Share PDF</button>
+<button onclick="clearData()">Clear All</button>
+</div>
 </div>
 
 <div class="section">
-
-  <div class="printHeader">
-
-    <h2>PAT Testing Logbook</h2>
-
-    <table>
-      <tr><td><b>Client</b></td><td id="p_client"></td></tr>
-      <tr><td><b>Address</b></td><td id="p_address"></td></tr>
-      <tr><td><b>Date</b></td><td id="p_date"></td></tr>
-    </table>
-
-    <table>
-      <tr><td><b>Engineer</b></td><td id="p_engineer"></td></tr>
-      <tr><td><b>Company</b></td><td id="p_company"></td></tr>
-      <tr><td><b>Phone</b></td><td id="p_phone"></td></tr>
-      <tr><td><b>Equipment</b></td><td id="p_equipment"></td></tr>
-      <tr><td><b>Serial</b></td><td id="p_serial"></td></tr>
-      <tr><td><b>Calibration</b></td><td id="p_calibration"></td></tr>
-    </table>
-
-  </div>
-
-  <div class="tableWrap">
-
-    <table id="table">
-      <thead>
-        <tr>
-          <th>Asset</th>
-          <th>Description</th>
-          <th>Location</th>
-          <th>Visual</th>
-          <th>Earth Bond (Ω)</th>
-          <th>Insulation (MΩ)</th>
-          <th>Polarity</th>
-          <th>Result</th>
-          <th>Re-Test</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-  </div>
-
+<div class="tableWrap">
+<table id="table">
+<thead>
+<tr>
+<th>Asset</th><th>Description</th><th>Location</th>
+<th>Visual</th><th>Earth</th><th>Insulation</th>
+<th>Polarity</th><th>Result</th><th>Re-Test</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
 <script>
 let rows = JSON.parse(localStorage.getItem("pat_rows") || "[]")
 
-function saveMeta(){
-  const meta={
-    engineerName:engineerName.value,
-    company:company.value,
-    phone:phone.value,
-    equipment:equipment.value,
-    serial:serial.value,
-    calibration:calibration.value,
-    clientName:clientName.value,
-    clientAddress:clientAddress.value,
-    jobDate:jobDate.value
-  }
-
-  localStorage.setItem("pat_meta",JSON.stringify(meta))
-  updatePrintHeader()
-}
-
-function loadMeta(){
-  const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
-
-  Object.keys(meta).forEach(k=>{
-    const el=document.getElementById(k)
-    if(el) el.value=meta[k]
-  })
-
-  updatePrintHeader()
-}
-
-function updatePrintHeader(){
-  const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
-
-  p_client.innerText=meta.clientName||""
-  p_address.innerText=meta.clientAddress||""
-  p_date.innerText=meta.jobDate||""
-
-  p_engineer.innerText=meta.engineerName||""
-  p_company.innerText=meta.company||""
-  p_phone.innerText=meta.phone||""
-  p_equipment.innerText=meta.equipment||""
-  p_serial.innerText=meta.serial||""
-  p_calibration.innerText=meta.calibration||""
-}
-
-function autoSaveSetup(){
-  document.querySelectorAll("input,select").forEach(el=>{
-    el.addEventListener("blur",saveMeta)
-  })
-}
-
-function nextAsset(){
-  return rows.length+1
-}
+function nextAsset(){ return rows.length+1 }
 
 function addYearsToISO(iso, years){
   if(!iso) return ""
   const [y,m,d] = iso.split("-").map(Number)
-  if(!y || !m || !d) return ""
-  const dt = new Date(Date.UTC(y, m-1, d))
-  dt.setUTCFullYear(dt.getUTCFullYear() + Number(years || 0))
-
-  const yy = dt.getUTCFullYear()
-  const mm = String(dt.getUTCMonth()+1).padStart(2,"0")
-  const dd = String(dt.getUTCDate()).padStart(2,"0")
-  return `${yy}-${mm}-${dd}`
+  const dt = new Date(y,m-1,d)
+  dt.setFullYear(dt.getFullYear()+Number(years))
+  return dt.toISOString().split("T")[0]
 }
 
 function addRow(){
-  const meta = JSON.parse(localStorage.getItem("pat_meta")||"{}")
-  const jobISO = meta.jobDate || ""
-  const intervalYears = document.getElementById("retestInterval").value
-  const retestDue = addYearsToISO(jobISO, intervalYears)
+  const jobDate = jobDateInput.value
+  const interval = document.getElementById("retestInterval").value
 
   const row={
     asset:nextAsset(),
@@ -385,7 +189,7 @@ function addRow(){
     insulation:insulation.value,
     polarity:polarity.value,
     result:result.value,
-    retest:retestDue
+    retest:addYearsToISO(jobDate,interval)
   }
 
   rows.push(row)
@@ -394,10 +198,8 @@ function addRow(){
 
   desc.value=""
   applianceLocation.value=""
-  visual.selectedIndex = 0
   earth.value=""
   insulation.value=""
-  document.getElementById("retestInterval").value="1"
 }
 
 function render(){
@@ -412,7 +214,7 @@ function render(){
       <td>${r.asset}</td>
       <td>${r.desc}</td>
       <td>${r.location}</td>
-      <td>${r.visual || ""}</td>
+      <td>${r.visual}</td>
       <td>${r.earth}</td>
       <td>${r.insulation}</td>
       <td>${r.polarity}</td>
@@ -424,17 +226,177 @@ function render(){
 }
 
 function clearData(){
-  if(confirm("Clear all test results?")){
+  if(confirm("Clear all?")){
     rows=[]
     localStorage.removeItem("pat_rows")
     render()
   }
 }
 
+/* ✅ PDF + SHARE */
+async function sharePDF(){
+
+  const { jsPDF } = window.jspdf
+  const doc = new jsPDF({orientation:"landscape"})
+
+  const pageHeight = doc.internal.pageSize.height
+
+  let y=10
+
+  // Title
+  doc.setFontSize(16)
+  doc.text("PAT Testing Logbook", 10, y)
+
+  y+=10
+  doc.setFontSize(10)
+
+  // =========================
+  // HEADER (2 COLUMN)
+  // =========================
+
+  let leftY = y
+
+  doc.text(`Engineer: ${engineerName.value}`,10,leftY)
+  doc.text(`Phone: ${phone.value}`,10,leftY+6)
+  doc.text(`Company: ${company.value}`,10,leftY+12)
+  doc.text(`Equipment: ${equipment.value}`,10,leftY+18)
+  doc.text(`Serial: ${serial.value}`,10,leftY+24)
+  doc.text(`Calibration: ${calibration.value}`,10,leftY+30)
+
+  let rightX = 150
+  doc.text(`Client: ${clientName.value}`,rightX,leftY)
+  doc.text(`Date: ${jobDate.value}`,rightX,leftY+6)
+  doc.text(`Address: ${clientAddress.value}`,rightX,leftY+12)
+
+  y = leftY + 40
+
+  // =========================
+  // TABLE CONFIG
+  // =========================
+
+  const headers = ["Asset","Description","Location","Visual","Earth","Insulation","Polarity","Result","Re-Test"]
+  const colWidths = [15,50,40,20,25,25,25,25,30]
+  const rowHeight = 7
+  const startX = 10
+
+function drawHeader() {
+  let x = startX;
+
+  // Save current graphics state pieces we're about to change
+  const prevText = doc.getTextColor();   // jsPDF returns an object in recent builds
+  const prevDraw = doc.getDrawColor();
+  const prevFill = doc.getFillColor();
+  const prevFontSize = doc.getFontSize();
+  const prevFont = doc.getFont();
+
+  // Header palette
+  const headerFill = [34, 34, 34];   // dark
+  const headerText = [255, 255, 255];
+  const stroke = [0, 0, 0];
+
+  // Header style
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+
+  headers.forEach((h, i) => {
+    doc.setFillColor(...headerFill);
+    doc.setDrawColor(...stroke);
+    doc.setTextColor(...headerText);
+
+    doc.rect(x, y, colWidths[i], rowHeight, 'F'); // fill
+    doc.rect(x, y, colWidths[i], rowHeight, 'S'); // stroke
+    doc.text(String(h), x + 2, y + 5);
+
+    x += colWidths[i];
+  });
+
+  y += rowHeight;
+
+  // Restore state so body rows aren't white
+  doc.setFont(prevFont.fontName || 'helvetica', prevFont.fontStyle || 'normal');
+  doc.setFontSize(prevFontSize);
+
+  // For colors, handle both array and object forms defensively:
+  const toRGB = c => Array.isArray(c) ? c : [c.r ?? 0, c.g ?? 0, c.b ?? 0];
+
+  doc.setTextColor(...toRGB(prevText));
+  doc.setDrawColor(...toRGB(prevDraw));
+  doc.setFillColor(...toRGB(prevFill));
+}
+
+
+  drawHeader()
+
+  // =========================
+  // ROWS
+  // =========================
+
+  rows.forEach((r,index)=>{
+
+    // 🔥 PAGE BREAK CHECK
+    if(y + rowHeight > pageHeight - 10){
+      doc.addPage()
+      y = 10
+      drawHeader()
+    }
+
+    let x = startX
+
+    // Zebra stripe
+    if(index % 2 === 0){
+      doc.setFillColor(240,240,240)
+      doc.rect(startX,y,colWidths.reduce((a,b)=>a+b,0),rowHeight,"F")
+    }
+
+    // Fix tick/cross
+    const fix = (val)=>{
+      if(val === "✓") return "Pass"
+      if(val === "✗") return "Fail"
+      return val || ""
+    }
+
+    const vals = [
+      r.asset,
+      r.desc,
+      r.location,
+      fix(r.visual),
+      r.earth,
+      r.insulation,
+      fix(r.polarity),
+      r.result,
+      r.retest
+    ]
+
+    vals.forEach((v,i)=>{
+      doc.rect(x,y,colWidths[i],rowHeight)
+      doc.text(String(v),x+1,y+5)
+      x += colWidths[i]
+    })
+
+    y += rowHeight
+  })
+
+  // =========================
+  // SHARE
+  // =========================
+
+  const blob = doc.output("blob")
+  const file = new File([blob], "PAT_Logbook.pdf", { type: "application/pdf" })
+
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    await navigator.share({
+      title: "PAT Logbook",
+      files: [file]
+    })
+  } else {
+    doc.save("PAT_Logbook.pdf")
+  }
+}
+
 document.getElementById("addBtn").addEventListener("click",addRow)
 
-loadMeta()
-autoSaveSetup()
+const jobDateInput = document.getElementById("jobDate")
+
 render()
 </script>
 
