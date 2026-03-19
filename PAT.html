@@ -158,8 +158,6 @@ th{
 
 </div>
 
-
-
 <div class="section entrySection">
 
   <h3>Job Information</h3>
@@ -182,8 +180,6 @@ th{
 
 </div>
 
-
-
 <div class="section entrySection">
 
   <h3>Add Appliance</h3>
@@ -195,24 +191,36 @@ th{
     </label>
 
     <label>Location
-      <!-- RENAMED to avoid window.location collision -->
       <input id="applianceLocation">
     </label>
 
-    <!-- Visual dropdown between Location and Earth Bond Ω -->
     <label>Visual
-      <select id="visual" aria-label="Visual inspection">
+      <select id="visual">
         <option>✓</option>
         <option>✗</option>
       </select>
     </label>
 
+    <!-- ✅ UPDATED -->
     <label>Earth Bond (Ω)
-      <input id="earth">
+      <input 
+        id="earth"
+        type="number"
+        step="0.01"
+        inputmode="decimal"
+        min="0"
+        placeholder="e.g. 0.15">
     </label>
 
+    <!-- ✅ UPDATED -->
     <label>Insulation (MΩ)
-      <input id="insulation">
+      <input 
+        id="insulation"
+        type="number"
+        step="0.01"
+        inputmode="decimal"
+        min="0"
+        placeholder="e.g. 200">
     </label>
 
     <label>Polarity
@@ -230,14 +238,12 @@ th{
       </select>
     </label>
 
-    <!-- CHANGED: Re-Test Date -> Re-Test Interval -->
     <label>Re-Test Interval
-      <select id="retestInterval" aria-label="Re-Test Interval">
+      <select id="retestInterval">
         <option value="1">1 year</option>
         <option value="2">2 years</option>
       </select>
     </label>
-    <!-- END CHANGE -->
 
   </div>
 
@@ -248,8 +254,6 @@ th{
   </div>
 
 </div>
-
-
 
 <div class="section">
 
@@ -277,13 +281,11 @@ th{
   <div class="tableWrap">
 
     <table id="table">
-
       <thead>
         <tr>
           <th>Asset</th>
           <th>Description</th>
           <th>Location</th>
-          <!-- Visual column header -->
           <th>Visual</th>
           <th>Earth Bond (Ω)</th>
           <th>Insulation (MΩ)</th>
@@ -292,22 +294,17 @@ th{
           <th>Re-Test</th>
         </tr>
       </thead>
-
       <tbody></tbody>
-
     </table>
 
   </div>
 
 </div>
 
-
-
 <script>
 let rows = JSON.parse(localStorage.getItem("pat_rows") || "[]")
 
 function saveMeta(){
-
   const meta={
     engineerName:engineerName.value,
     company:company.value,
@@ -322,11 +319,9 @@ function saveMeta(){
 
   localStorage.setItem("pat_meta",JSON.stringify(meta))
   updatePrintHeader()
-
 }
 
 function loadMeta(){
-
   const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
 
   Object.keys(meta).forEach(k=>{
@@ -335,11 +330,9 @@ function loadMeta(){
   })
 
   updatePrintHeader()
-
 }
 
 function updatePrintHeader(){
-
   const meta=JSON.parse(localStorage.getItem("pat_meta")||"{}")
 
   p_client.innerText=meta.clientName||""
@@ -352,33 +345,25 @@ function updatePrintHeader(){
   p_equipment.innerText=meta.equipment||""
   p_serial.innerText=meta.serial||""
   p_calibration.innerText=meta.calibration||""
-
 }
 
 function autoSaveSetup(){
-
   document.querySelectorAll("input,select").forEach(el=>{
     el.addEventListener("blur",saveMeta)
   })
-
 }
 
 function nextAsset(){
   return rows.length+1
 }
 
-/** Utility: add N years to a yyyy-mm-dd string; returns yyyy-mm-dd or "" if invalid */
 function addYearsToISO(iso, years){
   if(!iso) return ""
   const [y,m,d] = iso.split("-").map(Number)
   if(!y || !m || !d) return ""
   const dt = new Date(Date.UTC(y, m-1, d))
-  const targetYear = dt.getUTCFullYear() + Number(years || 0)
+  dt.setUTCFullYear(dt.getUTCFullYear() + Number(years || 0))
 
-  // Handle leap day carry: JS Date will roll correctly if Feb 29 -> Feb 28/Mar 1
-  dt.setUTCFullYear(targetYear)
-
-  // Format back to YYYY-MM-DD
   const yy = dt.getUTCFullYear()
   const mm = String(dt.getUTCMonth()+1).padStart(2,"0")
   const dd = String(dt.getUTCDate()).padStart(2,"0")
@@ -386,53 +371,41 @@ function addYearsToISO(iso, years){
 }
 
 function addRow(){
-
-  // Read meta to get the job date (re-test due depends on this)
   const meta = JSON.parse(localStorage.getItem("pat_meta")||"{}")
-  const jobISO = meta.jobDate || ""   // expected format yyyy-mm-dd
-  const intervalYears = (document.getElementById("retestInterval")?.value) || "1"
+  const jobISO = meta.jobDate || ""
+  const intervalYears = document.getElementById("retestInterval").value
   const retestDue = addYearsToISO(jobISO, intervalYears)
 
   const row={
     asset:nextAsset(),
     desc:desc.value,
-    location:applianceLocation.value, // uses renamed input
-    visual:visual.value,              // capture visual
+    location:applianceLocation.value,
+    visual:visual.value,
     earth:earth.value,
     insulation:insulation.value,
     polarity:polarity.value,
     result:result.value,
-    // store the computed date (or "" if job date missing)
     retest:retestDue
   }
 
   rows.push(row)
-
   localStorage.setItem("pat_rows",JSON.stringify(rows))
-
   render()
 
-  // reset inputs
   desc.value=""
   applianceLocation.value=""
   visual.selectedIndex = 0
   earth.value=""
   insulation.value=""
-  // reset interval back to 1 year
-  const ri = document.getElementById("retestInterval")
-  if(ri) ri.value = "1"
+  document.getElementById("retestInterval").value="1"
 }
 
 function render(){
-
   const body=document.querySelector("#table tbody")
-
   body.innerHTML=""
 
   rows.forEach(r=>{
-
     const tr=document.createElement("tr")
-
     if(r.result==="Fail") tr.classList.add("fail")
 
     tr.innerHTML=`
@@ -446,21 +419,16 @@ function render(){
       <td>${r.result}</td>
       <td>${r.retest}</td>
     `
-
     body.appendChild(tr)
-
   })
-
 }
 
 function clearData(){
-
   if(confirm("Clear all test results?")){
     rows=[]
     localStorage.removeItem("pat_rows")
     render()
   }
-
 }
 
 document.getElementById("addBtn").addEventListener("click",addRow)
@@ -468,7 +436,6 @@ document.getElementById("addBtn").addEventListener("click",addRow)
 loadMeta()
 autoSaveSetup()
 render()
-
 </script>
 
 </body>
